@@ -1,20 +1,24 @@
 "use client";
-import Image from 'next/image';
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useChat } from 'ai/react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Moon, Sun, Send, ChevronDown } from 'lucide-react';
+import { Moon, Sun, Send } from 'lucide-react';
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast"
 import { useTheme } from "next-themes";
-import Levels from "@/components/levels";
-import ApiChatMessage from '@/components/responseUi';
+import ApiList from '@/components/ApiList';
+import ApiDetails from '@/components/ApiDetails';
+import Image from 'next/image';
+import Levels from '@/components/levels';
 
 export default function ChatInterface() {
-  const { messages, input, handleInputChange, handleSubmit, setMessages } = useChat();
+  const { messages, input, handleInputChange, handleSubmit } = useChat({
+    api: '/api/chat',
+  });
   const [isTyping, setIsTyping] = useState(false);
   const [showTasks, setShowTasks] = useState(true);
   const { theme, setTheme } = useTheme();
@@ -31,13 +35,6 @@ export default function ChatInterface() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isTyping]);
-
-  useEffect(() => {
-    setMessages([
-      { id: '1', role: 'assistant', content: 'Welcome to CrustData! How can I assist you today?' },
-    ]);
-    setTheme('dark');
-  }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,14 +60,75 @@ export default function ChatInterface() {
     setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
+  const renderMessage = (message: any) => {
+    return (
+      <div
+        className={`rounded-2xl px-4 py-2.5 ${
+          message.role === 'user'
+            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+            : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md'
+        }`}
+      >
+        <div>{message.content}</div>
+        <div>
+          {message.toolInvocations?.map((toolInvocation: any) => {
+            const { toolName, toolCallId, state, result } = toolInvocation;
+            
+            if (state === 'result') {
+              if (toolName === 'listAPIs') {
+                return (
+                  <div key={toolCallId}>
+                    <ApiList 
+                      apis={result} 
+                      onSelectApi={(apiName) => {
+                        const e = { preventDefault: () => {} } as React.FormEvent<HTMLFormElement>;
+                        handleInputChange({ target: { value: `Tell me about the ${apiName} API` } } as React.ChangeEvent<HTMLInputElement>);
+                        handleSubmit(e);
+                      }}
+                    />
+                  </div>
+                );
+              }
+              if (toolName === 'getAPIDetails') {
+                return (
+                  <div key={toolCallId}>
+                    <ApiDetails 
+                      endpoint={result}
+                    />
+                  </div>
+                );
+              }
+            } else {
+              return (
+                <div key={toolCallId}>
+                  {toolName === 'listAPIs' ? (
+                    <div>Loading APIs...</div>
+                  ) : toolName === 'getAPIDetails' ? (
+                    <div>Loading API details...</div>
+                  ) : null}
+                </div>
+              );
+            }
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={`flex flex-col h-screen ${
       theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
     }`}>
       <header className="flex justify-between items-center p-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg">
         <div className="flex items-center space-x-2">
-          <Image src="/crustdata.svg" alt="CrustData Assistant" width={40} height={40} />
-          <h1 className="text-2xl font-bold">CrustData Assistant</h1>
+          <Image 
+            src="/crustdata.svg" 
+            alt="CrustData Assistant" 
+            width={60} 
+            height={60} 
+            className="dark:filter dark:invert"
+          />
+          <h1 className="text-2xl font-bold">CrustData API Assistant</h1>
         </div>
         <Button
           variant="outline"
@@ -108,27 +166,22 @@ export default function ChatInterface() {
                   className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div className={`flex items-end gap-3 max-w-[80%] ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                    <Avatar className="w-10 h-10">
-                      <AvatarFallback className="text-lg bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+                    <Avatar className="w-16 h-16">
+                      <AvatarFallback 
+                        className={`text-2xl ${
+                          message.role === 'user' 
+                            ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900' 
+                            : 'bg-white text-gray-900 dark:bg-gray-900 dark:text-white'
+                        }`}
+                      >
                         {message.role === 'user' ? 'U' : 'AI'}
                       </AvatarFallback>
                       <AvatarImage 
                         src={message.role === 'user' ? 'https://github.com/shadcn.png' : '/crustdata.svg'} 
+                        className={message.role === 'assistant' ? 'dark:filter dark:invert' : ''}
                       />
                     </Avatar>
-                    {message.role === 'assistant' && message.content.toLowerCase().includes('api') ? (
-                      <ApiChatMessage type="response" content={message.content} />
-                    ) : (
-                      <div
-                        className={`rounded-2xl px-4 py-2.5 ${
-                          message.role === 'user'
-                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                            : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-md'
-                        }`}
-                      >
-                        {message.content}
-                      </div>
-                    )}
+                    {renderMessage(message)}
                   </div>
                 </motion.div>
               ))}
@@ -140,9 +193,11 @@ export default function ChatInterface() {
                   className="flex justify-start"
                 >
                   <div className="flex items-end gap-3">
-                    <Avatar className="w-10 h-10">
-                      <AvatarFallback className="text-lg bg-gradient-to-br from-purple-500 to-pink-500 text-white">AI</AvatarFallback>
-                      <AvatarImage src="/crustdata.svg" />
+                    <Avatar className="w-16 h-16">
+                      <AvatarFallback className="text-2xl bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
+                        AI
+                      </AvatarFallback>
+                      <AvatarImage src="/crustdata.svg" className="dark:filter dark:invert" />
                     </Avatar>
                     <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl px-4 py-2.5 shadow-md">
                       <div className="flex space-x-2">
@@ -160,12 +215,12 @@ export default function ChatInterface() {
         </ScrollArea>
       </main>
 
-      <footer className="p-4 border-gray-200 dark:border-gray-700 bg-white ">
+      <footer className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white ">
         <form onSubmit={onSubmit} className="max-w-4xl mx-auto flex space-x-3">
           <Input
             value={input}
             onChange={handleInputChange}
-            placeholder="Ask CrustData anything..."
+            placeholder="Ask about CrustData APIs..."
             className="flex-grow rounded-full bg-gray-100 dark:bg-gray-700 border-0 focus-visible:ring-2 focus-visible:ring-purple-500 h-12"
           />
           <Button 
@@ -182,4 +237,3 @@ export default function ChatInterface() {
     </div>
   );
 }
-

@@ -1,16 +1,15 @@
 import { tool as createTool } from 'ai';
 import { z } from 'zod';
-import {getNameDescription, getApiInformation} from '@/utils/api_docs';
-
+import { getNameDescription, getApiInformation } from '@/utils/api_docs';
+import { error } from 'console';
+import { headers } from 'next/headers';
 
 export const listAPIs = createTool({
   description: 'Returns a list of all available API names.',
-  parameters: z.object({
-    ApiList: z.string().describe('these are the available APIs, based on the question return the API name'),
-  }),
-  execute: async ( ) => {
-    const apiNames = getNameDescription(); // Should return an array of API names
-    return apiNames;
+  parameters: z.object({}),  // No parameters needed
+  execute: async () => {
+    const apiNames = getNameDescription();
+    return apiNames.map(api => api.name);
   }
 });
 
@@ -20,15 +19,23 @@ export const getAPIDetails = createTool({
     apiName: z.string().describe('The name of the API to retrieve details for.'),
   }),
   execute: async ({ apiName }) => {
-    const apiDetails = getApiInformation(apiName); // Should return an object with API details
+    const apiDetails = getApiInformation(apiName);
     if (!apiDetails) {
       throw new Error(`API with name "${apiName}" not found.`);
     }
-    return apiDetails;
+    return {
+      name: apiDetails.name,
+      description: apiDetails.description,
+      path: apiDetails.path,
+      method: apiDetails.method,
+      headers : apiDetails.headers,
+      queryParams: apiDetails.queryParams,
+      responses: apiDetails.responses,
+    };
   }
 });
 
 export const tools = {
-  listAPIs: listAPIs,
-  getAPIDetails: getAPIDetails,
+  listAPIs,
+  getAPIDetails,
 };
