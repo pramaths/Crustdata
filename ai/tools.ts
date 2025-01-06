@@ -1,8 +1,7 @@
 import { tool as createTool } from 'ai';
 import { z } from 'zod';
 import { getNameDescription, getApiInformation } from '@/utils/api_docs';
-import { error } from 'console';
-import { headers } from 'next/headers';
+
 
 export const listAPIs = createTool({
   description: 'Returns a list of all available API names.',
