@@ -16,7 +16,8 @@ export const listAPIs = createTool({
 export const getAPIDetails = createTool({
   description: 'Returns detailed information about a specific API.',
   parameters: z.object({
-    apiName: z.string().describe('The name of the API to retrieve details for and return the details properly use simple string dont use markdown.'),
+    apiName: z.string().describe(`The name of the API to retrieve details for and return the details properly use simple string dont use markdown.
+      If its anything about ApI request put that in thriple backticks and use markdown to highlight the request.`),
   }),
   execute: async ({ apiName }) => {
     const apiDetails = getApiInformation(apiName);
