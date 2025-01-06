@@ -93,7 +93,7 @@ const Levels: React.FC<Props> = ({ showTasks }) => {
                                             <p className="text-sm text-gray-500 dark:text-gray-400">{task.description}</p>
                                         </div>
                                     </div>
-                                    {completedTasks.includes(task) && (
+                                    {completedTasks.includes(task) &&  task.title!="Slack Integration" && (
                                         <motion.div
                                             initial={{ scale: 0 }}
                                             animate={{ scale: 1 }}
