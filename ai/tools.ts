@@ -8,7 +8,7 @@ export const listAPIs = createTool({
   parameters: z.object({}),  // No parameters needed
   execute: async () => {
     const apiNames = APINamesandDescriptions();
-    return apiNames.map(api => api.name+ ' - ' + api.description);
+    return apiNames.map(api => api.name);
   }
 });
 

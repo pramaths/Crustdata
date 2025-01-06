@@ -188,6 +188,25 @@ export default function ChatInterface() {
       </main>
 
       <footer className="p-4 bg-black">
+        <div className="max-w-3xl mx-auto mb-4">
+          <p className="text-zinc-400 text-sm mb-2">Example queries:</p>
+          <div className="flex flex-wrap gap-2">
+            {['Can u list down all the API available', 'How to use the User API?', 'What are the authentication methods can u provide me code?'].map((query, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                size="sm"
+                onClick={async() => {
+                  handleInputChange({ target: { value: query } } as React.ChangeEvent<HTMLInputElement>);
+                  await handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+                }}
+                className="text-zinc-300 border-zinc-700 hover:bg-zinc-800 bg-black"
+              >
+                {query}
+              </Button>
+            ))}
+          </div>
+        </div>
         <form onSubmit={onSubmit} className="max-w-3xl mx-auto flex space-x-3 items-center">
           <Input
             value={input}
