@@ -1,0 +1,463 @@
+{   
+    "screeningCompanies": {
+        "/screener/company": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "tags": [
+                    "Company API"
+                ],
+                "summary": "Company enrichment API",
+                "description": "This endpoint enriches company data by retrieving detailed information about one or multiple companies using either their domain, name, or ID.",
+                "parameters": [
+                    {
+                        "name": "company_name",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "description": "Comma separated values of company names. For example \"Hubspot,Github\". You can provide up to 25 domains in a comma-separated string.",
+                            "examples": [
+                                "Hubspot,Github"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "company_linkedin_url",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "description": "Comma separated values of LinkedIn Profiles. You can provide up to 25 urls in a comma-separated string.",
+                            "examples": [
+                                "https://www.linkedin.com/in/dtpow/,https://www.linkedin.com/in/janedoe"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "company_domain",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "description": "Comma separated values of company domains.",
+                            "examples": [
+                                "hubspot.com,github.com"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "company_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "number",
+                            "description": "Comma separated values of company Ids. These are Crustdata company id's.",
+                            "examples": [
+                                "12345,67890"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "fields",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "description": "Specifies the fields you want to include in the response. Supports nested fields up to a certain level.",
+                            "examples": [
+                                "company_name,company_domain,glassdoor.glassdoor_review_count"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "enrich_realtime",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean",
+                            "description": "When true, if a company is not present in Crustdata's database, it will be indexed within 10 minutes of the request. When false, the data will be indexed in next 24 hours.",
+                            "default": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The response provides a comprehensive profile of the company, including firmographic details, social media links, headcount data, and growth metrics.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompanyData"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, please check your request body to fix this error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "examples": [
+                                                "Failed to parse LinkedIn url"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "screenScreener":{
+        "/screener/screen/": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "tags": [
+                    "Company API"
+                ],
+                "summary": "Screen companies",
+                "description": "Retrieve a list of companies based on specified metrics and filters",
+                "operationId": "screenCompanies",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ScreeningRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompanyScreeningResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, please check your request body to fix this error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "screenCompanySearch": {
+        "/screener/company/search": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "tags": [
+                    "Company API"
+                ],
+                "summary": "Real-time company search API",
+                "description": "Searches for company profiles on the web in real-time. Accepts a set of filters for search criteria.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CompanySearchByFilters"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "A JSON response containing a list of company profiles found and the total number of profiles available.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "companies": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CompanySearchResponse"
+                                            }
+                                        },
+                                        "total_display_count": {
+                                            "type": "integer",
+                                            "description": "Total number of profiles available based on the search."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, please check your request body to fix this error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "examples": [
+                                                "Failed to parse Filters"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "screenPeopleSearch": {
+        "/screener/person/search": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "tags": [
+                    "People API"
+                ],
+                "summary": "Real-time People Search API",
+                "description": "Searches for people profiles on the web. Accepts a set of filters around person and employer attributes as search criteria.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CompanySearchByFilters"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "A JSON response containing a list of people profiles found and the total number of profiles available.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "profiles": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PersonSearchResponse"
+                                            }
+                                        },
+                                        "total_display_count": {
+                                            "type": "integer",
+                                            "description": "Total number of profiles available based on the search."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, please check your request body to fix this error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "examples": [
+                                                "Failed to parse Filters"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "screenPeopleEnrich": {
+        "/screener/person/enrich": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "tags": [
+                    "People API"
+                ],
+                "summary": "People Enrichment API",
+                "description": "Enrich data for one or more individuals using LinkedIn profile URLs or business email addresses. You must provide",
+                "parameters": [
+                    {
+                        "name": "linkedin_profile_url",
+                        "description": "Comma-separated list of LinkedIn profile URLs",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "business_email",
+                        "description": "Comma-separated list of business email addresses",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "enrich_realtime": null,
+                        "description": "If set to True, performs a real-time search from the web if data is not found in the database.",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProfessionalProfile"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, please check your request body to fix this error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "examples": [
+                                                "Failed to parse LinkedIn url"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "screenLinkedInPosts": {
+        "/screener/linkedin_posts": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "tags": [
+                    "People API"
+                ],
+                "summary": "LinkedIn Posts by Person",
+                "description": "This endpoint retrieves recent LinkedIn posts and related engagement metrics for a specified person.",
+                "parameters": [
+                    {
+                        "name": "person_linkedin_url",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "examples": [
+                                "https://www.linkedin.com/in/satyanadella"
+                            ],
+                            "description": "LinkedIn profile url of the person. For example, any of these formats work https://linkedin.com/in/abhilash-chowdhary (flagship url) or https://linkedin.com/in/ACoAAAAsKtMBHQPJ9rgxpUs8M6pSxrAYCXIX8oY"
+                        }
+                    },
+                    {
+                        "name": "company_domain",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "examples": [
+                                "https://crustdata.com"
+                            ],
+                            "description": "LinkedIn profile url of the person. For example, any of these formats work https://linkedin.com/in/abhilash-chowdhary (flagship url) or https://linkedin.com/in/ACoAAAAsKtMBHQPJ9rgxpUs8M6pSxrAYCXIX8oY"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "number",
+                            "examples": [
+                                1
+                            ],
+                            "description": "Page number for pagination"
+                        },
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The response provides a list of recent LinkedIn posts for the specified company, including post content, engagement metrics, and information about users who interacted with the posts.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Post"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, please check your request body to fix this error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "examples": [
+                                                "Failed to parse LinkedIn url"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+

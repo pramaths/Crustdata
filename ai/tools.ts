@@ -1,14 +1,14 @@
 import { tool as createTool } from 'ai';
 import { z } from 'zod';
-import { getNameDescription, getApiInformation } from '@/utils/api_docs';
+import { getNameDescription, getApiInformation, getEndpoints, APINamesandDescriptions } from '@/utils/api_docs';
 
 
 export const listAPIs = createTool({
-  description: 'Returns a list of all available API names.',
+  description: 'Returns a list of all available API names. here one of the string contains the name of the API and the other string contains the description of the API. Always return just the api name not the entire description.',
   parameters: z.object({}),  // No parameters needed
   execute: async () => {
-    const apiNames = getNameDescription();
-    return apiNames.map(api => api.name);
+    const apiNames = APINamesandDescriptions();
+    return apiNames.map(api => api.name+ ' - ' + api.description);
   }
 });
 
@@ -19,19 +19,11 @@ export const getAPIDetails = createTool({
       If its anything about ApI request put that in thriple backticks and use markdown to highlight the request.`),
   }),
   execute: async ({ apiName }) => {
-    const apiDetails = getApiInformation(apiName);
+    const apiDetails = getEndpoints(apiName);
     if (!apiDetails) {
       throw new Error(`API with name "${apiName}" not found.`);
     }
-    return {
-      name: apiDetails.name,
-      description: apiDetails.description,
-      path: apiDetails.path,
-      method: apiDetails.method,
-      headers : apiDetails.headers,
-      queryParams: apiDetails.queryParams,
-      responses: apiDetails.responses,
-    };
+    return apiDetails
   }
 });
 

@@ -1,3 +1,5 @@
+const api = require('../api_spec.json');
+
 interface Endpoint {
   name: string;
   method: string;
@@ -97,3 +99,104 @@ export function getApiInformation(apiName: string): Endpoint | undefined {
   }
   return undefined;
 }
+
+interface APINameDescription {
+  name: string;
+  description: string;
+}
+
+
+interface ApiInfo {
+  title: string;
+  description: string;
+  version: string;
+}
+
+interface Server {
+  url: string;
+}
+
+interface SecurityDefinition {
+  type: string;
+  name: string;
+  in: string;
+  description: string;
+}
+
+interface Tag {
+  name: string;
+  description: string;
+}
+
+interface ApiEndpoint {
+  security: Array<Record<string, any>>;
+  tags: string[];
+  summary?: string;
+  description: string;
+  parameters?: any[];
+  responses: Record<string, any>;
+}
+
+interface ApiDocumentation {
+  info: ApiInfo;
+  servers: Server[];
+  schemes: string[];
+  securityDefinitions: {
+    Bearer: SecurityDefinition;
+  };
+  tags: Tag[];
+  [key: string]: any; 
+}
+
+export const APINamesandDescriptions = (): Array<APINameDescription> => {
+  const knownKeys = ['info', 'servers', 'schemes', 'securityDefinitions', 'tags'];
+    const endpoints: Array<APINameDescription> = [];
+    Object.entries(api).forEach(([section, content]) => {
+      if (!knownKeys.includes(section)) {
+        Object.entries(content as Record<string, any>).forEach(([path, methods]: [string, any]) => {
+          Object.entries(methods).forEach(([method, details]: [string, any]) => {
+            endpoints.push({
+              name: details.summary || path,
+              description: details.description,
+            });
+          });
+        });
+      }
+    });
+
+    return endpoints;
+}
+
+export const getEndpoints = (apiName:string) => {
+  const endpoints: Array<{
+    name: string;
+    section: string;
+    path: string;
+    method: string;
+    details: ApiEndpoint;
+  }> = [];
+
+  const knownKeys = ['info', 'servers', 'schemes', 'securityDefinitions', 'tags'];
+  
+  Object.entries(api).forEach(([section, content]) => {
+    if (!knownKeys.includes(section)) {
+      Object.entries(content as Record<string,any>).forEach(([path, methods]: [string, any]) => {
+        Object.entries(methods).forEach(([method, details]: [string, any]) => {
+          endpoints.push({
+            name: details.name || details.summary,
+            section,
+            path,
+            method,
+            details: details as ApiEndpoint,
+          });
+        });
+      });
+    }
+  });
+
+  return endpoints.find((endpoint) => endpoint.name === apiName);
+};
+
+
+export const url = "https://api.crustdata.com";
+export const title = "Crustdata API";
