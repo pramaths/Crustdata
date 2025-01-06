@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast"
 import ApiList from '@/components/ApiList';
 import ApiDetails from '@/components/ApiDetails';
+import CodeBlock from '@/components/CodeBlock';
 import Image from 'next/image';
 import Levels from '@/components/levels';
 
@@ -55,6 +56,7 @@ export default function ChatInterface() {
   };
 
   const renderMessage = (message: any) => {
+    const parts = message.content.split(/(```[\s\S]*?```)/g);
     return (
       <div
         className={`rounded-2xl px-4 py-2.5 ${
@@ -63,7 +65,13 @@ export default function ChatInterface() {
             : 'bg-zinc-900 text-white'
         }`}
       >
-        <div>{message.content}</div>
+        {parts.map((part: string, index: number) => {
+          if (part.startsWith('```') && part.endsWith('```')) {
+            const [, language, code] = part.match(/```(\w+)?\n([\s\S]+)```/) || [];
+            return <CodeBlock key={index} code={code} language={language || 'plaintext'} />;
+          }
+          return <div key={index}>{part}</div>;
+        })}
         <div>
           {message.toolInvocations?.map((toolInvocation: any) => {
             const { toolName, toolCallId, state, result } = toolInvocation;
@@ -204,3 +212,4 @@ export default function ChatInterface() {
     </div>
   );
 }
+
